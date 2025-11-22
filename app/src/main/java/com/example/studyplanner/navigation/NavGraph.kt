@@ -12,8 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.studyplanner.ui.screens.*
 
 @Composable
-fun AppNavGraph() {
-
+fun AppNavGraph(onScreenView: (String) -> Unit) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -33,37 +32,45 @@ fun AppNavGraph() {
             modifier = Modifier.padding(padding)
         ) {
 
-            // ---------- LOGIN ----------
             composable("login") {
+                onScreenView("LoginScreen")
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.navigate("home") {
-                            popUpTo("login") { inclusive = true }
-                        }
+                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
                     },
-                    onNavigateToRegister = { navController.navigate("register") }
+                    onNavigateToRegister = {
+                        navController.navigate("register")
+                    }
                 )
             }
 
-            // ---------- REGISTER ----------
+            composable("home") {
+                onScreenView("HomeScreen")
+                HomeScreen()
+            }
+
             composable("register") {
+                onScreenView("RegisterScreen")
                 RegisterScreen(
-                    onRegisterSuccess = {
-                        navController.navigate("home") {
-                            popUpTo("register") { inclusive = true }
-                        }
-                    },
+                    onRegisterSuccess = { navController.navigate("home") },
                     onBack = { navController.popBackStack() }
                 )
             }
 
-            // ---------- HOME ----------
-            composable("home") { HomeScreen() }
+            composable("schedule") {
+                onScreenView("ScheduleScreen")
+                ScheduleScreen(onBack = { navController.navigate("home") })
+            }
 
-            // ---------- OTHER SCREENS ----------
-            composable("schedule") { ScheduleScreen(onBack = { navController.navigate("home") }) }
-            composable("tasks") { TasksScreen(onBack = { navController.navigate("home") }) }
-            composable("profile") { ProfileScreen(onBack = { navController.navigate("home") }) }
+            composable("tasks") {
+                onScreenView("TasksScreen")
+                TasksScreen(onBack = { navController.navigate("home") })
+            }
+
+            composable("profile") {
+                onScreenView("ProfileScreen")
+                ProfileScreen(onBack = { navController.navigate("home") })
+            }
         }
     }
 }
