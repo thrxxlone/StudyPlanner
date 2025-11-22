@@ -33,17 +33,34 @@ fun AppNavGraph() {
             modifier = Modifier.padding(padding)
         ) {
 
+            // ---------- LOGIN ----------
             composable("login") {
                 LoginScreen(
                     onLoginSuccess = {
                         navController.navigate("home") {
                             popUpTo("login") { inclusive = true }
                         }
-                    }
+                    },
+                    onNavigateToRegister = { navController.navigate("register") }
                 )
             }
 
+            // ---------- REGISTER ----------
+            composable("register") {
+                RegisterScreen(
+                    onRegisterSuccess = {
+                        navController.navigate("home") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            // ---------- HOME ----------
             composable("home") { HomeScreen() }
+
+            // ---------- OTHER SCREENS ----------
             composable("schedule") { ScheduleScreen(onBack = { navController.navigate("home") }) }
             composable("tasks") { TasksScreen(onBack = { navController.navigate("home") }) }
             composable("profile") { ProfileScreen(onBack = { navController.navigate("home") }) }

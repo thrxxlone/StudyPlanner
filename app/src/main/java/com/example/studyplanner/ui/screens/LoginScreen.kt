@@ -20,12 +20,14 @@ import com.example.studyplanner.R
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit) {
-
+fun LoginScreen(onLoginSuccess: () -> Unit,
+                onNavigateToRegister: () -> Unit) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -33,8 +35,10 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
             .background(Color.White),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Spacer(modifier = Modifier.height(40.dp))
 
+        // Top row with text and logo
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -68,6 +72,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Dark container
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -83,6 +88,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                // Email
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -100,6 +107,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Password
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -118,6 +126,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Remember me + Forgot password
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -146,8 +155,32 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Firebase error
+                errorMessage?.let {
+                    Text(text = it, color = Color.Red, fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                // ------ LOGIN BUTTON ------
                 Button(
-                    onClick = {  onLoginSuccess() },
+                    onClick = {
+                        val auth = FirebaseAuth.getInstance()
+
+                        if (email.isNotEmpty() && password.isNotEmpty()) {
+                            isLoading = true
+                            auth.signInWithEmailAndPassword(email, password)
+                                .addOnCompleteListener { task ->
+                                    isLoading = false
+                                    if (task.isSuccessful) {
+                                        onLoginSuccess()
+                                    } else {
+                                        errorMessage = task.exception?.message ?: "Login failed"
+                                    }
+                                }
+                        } else {
+                            errorMessage = "Please fill all fields"
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -166,12 +199,16 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                             .fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "Sign In",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
+                        } else {
+                            Text(
+                                text = "Sign In",
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
 
@@ -179,8 +216,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                 Text("Or", color = Color.Gray, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Google Sign-in (not implemented)
                 OutlinedButton(
-                    onClick = { /* TODO: handle Google Sign-In */ },
+                    onClick = { },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -200,6 +238,38 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
                         Text("Sign in with Google VNS", fontSize = 15.sp)
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // ------ REGISTER BUTTON ------
+                Button(
+                    onClick = { onNavigateToRegister() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(25.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    contentPadding = PaddingValues()
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.horizontalGradient(
+                                    listOf(Color(0xFF4169E1), Color(0xFF00008B))
+                                ),
+                                shape = RoundedCornerShape(25.dp)
+                            )
+                            .fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Register",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
             }
 
         }
