@@ -20,13 +20,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import com.example.studyplanner.MainActivity
 import com.example.studyplanner.R
 
 @Composable
 fun HomeScreen(
     onNavigateToSchedule: () -> Unit = {},
     onNavigateToTasks: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onTestCrash: () -> Unit = {} // callback для кнопки крешу
 ) {
     Column(
         modifier = Modifier
@@ -80,6 +83,20 @@ fun HomeScreen(
         )
 
         Spacer(Modifier.height(20.dp))
+
+        // ---------- Кнопка для тесту Crashlytics ----------
+        Button(
+            onClick = { onTestCrash() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+        ) {
+            Text("Crash Test", color = Color.White)
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // ---------- UPCOMING DEADLINE ----------
         Box(

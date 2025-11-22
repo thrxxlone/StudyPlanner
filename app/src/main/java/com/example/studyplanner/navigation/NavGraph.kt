@@ -5,10 +5,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.studyplanner.MainActivity
 import com.example.studyplanner.ui.screens.*
 
 @Composable
@@ -17,6 +19,8 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val bottomBarScreens = listOf("home", "schedule", "tasks", "profile")
+
+    val context = LocalContext.current
 
     Scaffold(
         bottomBar = {
@@ -46,7 +50,9 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
 
             composable("home") {
                 onScreenView("HomeScreen")
-                HomeScreen()
+                HomeScreen(
+                    onTestCrash = { (context as? MainActivity)?.generateTestCrash() }
+                )
             }
 
             composable("register") {
