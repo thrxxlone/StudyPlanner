@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.studyplanner.R
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.ui.text.TextStyle
+
 
 @Composable
 fun LoginScreen(onLoginSuccess: () -> Unit,
@@ -95,6 +97,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
                     onValueChange = { email = it },
                     label = { Text("Email") },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White,
                         unfocusedBorderColor = Color.Gray,
@@ -113,6 +116,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
                     onValueChange = { password = it },
                     label = { Text("Password") },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
                     visualTransformation = PasswordVisualTransformation(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White,

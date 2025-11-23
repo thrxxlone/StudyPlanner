@@ -59,6 +59,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-crashlytics")
 
+
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 

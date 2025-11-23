@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -73,6 +74,7 @@ fun RegisterScreen(
                     onValueChange = { name = it },
                     label = { Text("Enter your name") },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White,
@@ -90,6 +92,7 @@ fun RegisterScreen(
                     onValueChange = { email = it },
                     label = { Text("Enter your email") },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.White,
@@ -107,6 +110,7 @@ fun RegisterScreen(
                     onValueChange = { password = it },
                     label = { Text("Enter your password") },
                     singleLine = true,
+                    textStyle = TextStyle(color = Color.White),
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
