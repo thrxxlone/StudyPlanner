@@ -10,8 +10,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.compose.rememberNavController
 import com.example.studyplanner.MainActivity
 import com.example.studyplanner.ui.screens.*
 
@@ -42,9 +42,7 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
                 onScreenView("LoginScreen")
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.navigate("home") {
-                            popUpTo("login") { inclusive = true }
-                        }
+                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
                     },
                     onNavigateToRegister = {
                         navController.navigate("register")
@@ -87,23 +85,27 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
                 AddTaskScreen(navController)
             }
 
-            // -------------------------------
-            //           TASK DETAIL
-            // -------------------------------
+            // ✅ TaskDetailScreen з аргументами
             composable(
-                route = "task_detail/{taskName}",
+                "task_detail/{name}/{description}/{priority}/{expiration}",
                 arguments = listOf(
-                    navArgument("taskName") { type = NavType.StringType }
+                    navArgument("name") { type = NavType.StringType },
+                    navArgument("description") { type = NavType.StringType },
+                    navArgument("priority") { type = NavType.StringType },
+                    navArgument("expiration") { type = NavType.StringType }
                 )
             ) { backStackEntry ->
-
-                val taskName = backStackEntry.arguments?.getString("taskName") ?: "Unknown Task"
-
-                onScreenView("TaskDetailScreen")
+                val name = backStackEntry.arguments?.getString("name")?.replace("%20", " ") ?: ""
+                val description = backStackEntry.arguments?.getString("description")?.replace("%20", " ") ?: ""
+                val priority = backStackEntry.arguments?.getString("priority") ?: ""
+                val expiration = backStackEntry.arguments?.getString("expiration") ?: ""
 
                 TaskDetailScreen(
                     navController = navController,
-                    taskName = taskName
+                    taskName = name,
+                    description = description,
+                    priority = priority,
+                    expiration = expiration
                 )
             }
         }

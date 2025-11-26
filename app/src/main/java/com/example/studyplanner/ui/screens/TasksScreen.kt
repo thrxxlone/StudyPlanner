@@ -1,122 +1,114 @@
 package com.example.studyplanner.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.studyplanner.bloc.TaskBloc
+import com.example.studyplanner.bloc.TaskEvent
+import com.example.studyplanner.bloc.TaskState
+import com.example.studyplanner.ui.components.TaskCard
 
-// Модель завдання для hardcoded даних
-data class Task(
-    val name: String,
-    val description: String,
-    val priority: String,
-    val expiration: String
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TasksScreen(navController: NavController) {
+fun TasksScreen(
+    navController: NavController,
+    viewModel: TaskBloc = viewModel()
+) {
+    val state by viewModel.state.collectAsState()
 
-    // Hardcoded список завдань
-    val tasks = listOf(
-        Task("Task 1", "Finish UI for login screen", "High", "01 Nov 2025"),
-        Task("Task 2", "Prepare project documentation", "Medium", "03 Nov 2025"),
-        Task("Task 3", "Test Firebase integration", "Low", "05 Nov 2025")
-    )
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(TaskEvent.LoadTasks)
+    }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Tasks") },
+                actions = {
+                    // Кнопка для тестової помилки
+                    IconButton(onClick = { viewModel.onEvent(TaskEvent.ForceError) }) {
+                        Icon(Icons.Default.Warning, contentDescription = "Force Error")
+                    }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-
-            // Верхній бар
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("My Tasks", fontSize = 28.sp, color = Color.Black)
-                IconButton(onClick = {}) {
-                    Icon(Icons.Default.Menu, contentDescription = "menu")
+                    // Кнопка додавання нового завдання
+                    IconButton(onClick = { navController.navigate("add_task") }) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Task")
+                    }
                 }
-            }
+            )
+        }
+    ) { padding ->
+        Box(modifier = Modifier.padding(padding)) {
+            when (state) {
+                is TaskState.Idle -> {
+                    Text("Idle state...", Modifier.padding(16.dp))
+                }
 
-            // Список завдань
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
-            ) {
-                items(tasks) { task ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                            .padding(vertical = 10.dp)
-                            .background(
-                                color = Color(0xFF5123E8),
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .clickable {
-                                // Перехід на деталі завдання
-                                navController.navigate("task_detail/${task}")
-                            }
-                            .padding(16.dp)
+                is TaskState.Loading -> {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(task.name, fontSize = 20.sp, color = Color.White)
-                            Text(task.description, fontSize = 14.sp, color = Color.White)
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("Priority: ${task.priority}", color = Color.White, fontSize = 12.sp)
-                                Text("Expires: ${task.expiration}", color = Color.White, fontSize = 12.sp)
-                            }
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Loading tasks...")
+                    }
+                }
+
+                is TaskState.Data -> {
+                    val tasks = (state as TaskState.Data).data
+
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(12.dp)
+                    ) {
+                        items(tasks) { t ->
+                            TaskCard(
+                                title = t.name,
+                                description = t.description,
+                                priority = t.priority,
+                                expiration = t.expiration,
+                                onClick = {
+                                    val encodedName = t.name.replace(" ", "%20")
+                                    val encodedDesc = t.description.replace(" ", "%20")
+                                    navController.navigate(
+                                        "task_detail/$encodedName/$encodedDesc/${t.priority}/${t.expiration}"
+                                    )
+                                }
+                            )
+                            Spacer(Modifier.height(12.dp))
                         }
                     }
                 }
-            }
-        }
 
-        // Плаваюча зелена кнопка "+"
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .background(Color(0xFF32CD32), CircleShape)
-                    .clickable {
-                        navController.navigate("add_task")
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Add",
-                    tint = Color.White,
-                    modifier = Modifier.size(32.dp)
-                )
+                is TaskState.Error -> {
+                    val error = (state as TaskState.Error).message
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Error: $error",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { viewModel.onEvent(TaskEvent.LoadTasks) }) {
+                            Text("Retry")
+                        }
+                    }
+                }
             }
         }
     }
