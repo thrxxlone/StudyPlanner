@@ -10,27 +10,43 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import com.example.studyplanner.MainActivity
 import com.example.studyplanner.R
+import com.example.studyplanner.data.StorageManager
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun HomeScreen(
     onNavigateToSchedule: () -> Unit = {},
     onNavigateToTasks: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
-    onTestCrash: () -> Unit = {} // callback для кнопки крешу
+    onTestCrash: () -> Unit = {}
 ) {
+
+    val context = LocalContext.current
+    val storage = remember { StorageManager(context) }
+
+    var userName by remember { mutableStateOf("Користувач") }
+
+    // 🔹 Зчитуємо email і формуємо ім’я
+    LaunchedEffect(true) {
+        storage.userEmail.collectLatest { email ->
+            if (!email.isNullOrEmpty()) {
+                userName = email.substringBefore("@")
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,14 +93,14 @@ fun HomeScreen(
 
         // -------- GREETING --------
         Text(
-            "Привіт, Oleksandr✍️",
+            "Привіт, $userName ✍️",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
 
         Spacer(Modifier.height(20.dp))
 
-        // ---------- Кнопка для тесту Crashlytics ----------
+        // ---------- Crash Test ----------
         Button(
             onClick = { onTestCrash() },
             modifier = Modifier

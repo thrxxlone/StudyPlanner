@@ -16,6 +16,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
+import kotlinx.coroutines.launch
+import androidx.compose.ui.platform.LocalContext
+import com.example.studyplanner.data.StorageManager
 
 @Composable
 fun RegisterScreen(
@@ -23,9 +27,14 @@ fun RegisterScreen(
     onBack: () -> Unit
 ) {
 
+    val context = LocalContext.current
+    val storage = remember { StorageManager(context) }
+    val scope = rememberCoroutineScope()
+
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -148,13 +157,36 @@ fun RegisterScreen(
                         }
 
                         isLoading = true
+
                         FirebaseAuth.getInstance()
                             .createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener { task ->
-                                isLoading = false
                                 if (task.isSuccessful) {
-                                    onRegisterSuccess()
+
+                                    val user = FirebaseAuth.getInstance().currentUser
+
+                                    // 🔹 1. Оновлюємо ім’я в Firebase
+                                    val updateRequest = UserProfileChangeRequest.Builder()
+                                        .setDisplayName(name)
+                                        .build()
+
+                                    user?.updateProfile(updateRequest)?.addOnCompleteListener {
+
+                                        // 🔹 2. Зберігаємо все в DataStore
+                                        scope.launch {
+                                            storage.saveUser(
+                                                uid = user.uid,
+                                                email = email
+                                            )
+                                            storage.saveName(name)
+                                        }
+
+                                        isLoading = false
+                                        onRegisterSuccess()
+                                    }
+
                                 } else {
+                                    isLoading = false
                                     errorMessage = task.exception?.message ?: "Unknown error"
                                 }
                             }

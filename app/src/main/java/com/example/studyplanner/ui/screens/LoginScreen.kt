@@ -14,22 +14,30 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.studyplanner.R
 import com.google.firebase.auth.FirebaseAuth
-import androidx.compose.ui.text.TextStyle
-
+import androidx.compose.ui.platform.LocalContext
+import com.example.studyplanner.data.StorageManager
+import kotlinx.coroutines.launch
 
 @Composable
-fun LoginScreen(onLoginSuccess: () -> Unit,
-                onNavigateToRegister: () -> Unit) {
+fun LoginScreen(
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val storage = remember { StorageManager(context) }
+    val coroutine = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -40,7 +48,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Top row with text and logo
+        // HEADER
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -74,7 +82,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Dark container
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -91,7 +98,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // Email
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -110,7 +116,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -130,7 +135,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Remember me + Forgot password
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -159,13 +163,12 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Firebase error
                 errorMessage?.let {
                     Text(text = it, color = Color.Red, fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                // ------ LOGIN BUTTON ------
+                // ---------- LOGIN ----------
                 Button(
                     onClick = {
                         val auth = FirebaseAuth.getInstance()
@@ -175,10 +178,23 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
                             auth.signInWithEmailAndPassword(email, password)
                                 .addOnCompleteListener { task ->
                                     isLoading = false
+
                                     if (task.isSuccessful) {
+
+                                        val uid = auth.currentUser?.uid ?: ""
+                                        val emailUser = auth.currentUser?.email ?: email
+
+                                        if (rememberMe) {
+                                            coroutine.launch {
+                                                storage.saveUser(uid, emailUser)
+                                            }
+                                        }
+
                                         onLoginSuccess()
+
                                     } else {
-                                        errorMessage = task.exception?.message ?: "Login failed"
+                                        errorMessage =
+                                            task.exception?.message ?: "Login failed"
                                     }
                                 }
                         } else {
@@ -220,9 +236,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
                 Text("Or", color = Color.Gray, fontSize = 14.sp)
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Google Sign-in (not implemented)
                 OutlinedButton(
-                    onClick = { },
+                    onClick = {},
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -242,9 +257,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit,
                         Text("Sign in with Google VNS", fontSize = 15.sp)
                     }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // ------ REGISTER BUTTON ------
                 Button(
                     onClick = { onNavigateToRegister() },
                     modifier = Modifier
