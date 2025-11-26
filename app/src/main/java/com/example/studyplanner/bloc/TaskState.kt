@@ -8,3 +8,4 @@ sealed class TaskState {
     data class Data(val data: List<TaskItem>) : TaskState()
     data class Error(val message: String, val oldData: List<TaskItem>?) : TaskState()
 }
+
