@@ -85,7 +85,7 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
                 AddTaskScreen(navController)
             }
 
-            // ✅ TaskDetailScreen з аргументами
+            // ✅ TaskDetailScreen
             composable(
                 "task_detail/{name}/{description}/{priority}/{expiration}",
                 arguments = listOf(
