@@ -6,10 +6,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.studyplanner.MainActivity
 import com.example.studyplanner.ui.screens.*
 
@@ -40,7 +42,9 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
                 onScreenView("LoginScreen")
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
+                        navController.navigate("home") {
+                            popUpTo("login") { inclusive = true }
+                        }
                     },
                     onNavigateToRegister = {
                         navController.navigate("register")
@@ -70,12 +74,37 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
 
             composable("tasks") {
                 onScreenView("TasksScreen")
-                TasksScreen(onBack = { navController.navigate("home") })
+                TasksScreen(navController)
             }
 
             composable("profile") {
                 onScreenView("ProfileScreen")
                 ProfileScreen(onBack = { navController.navigate("home") })
+            }
+
+            composable("add_task") {
+                onScreenView("AddTaskScreen")
+                AddTaskScreen(navController)
+            }
+
+            // -------------------------------
+            //           TASK DETAIL
+            // -------------------------------
+            composable(
+                route = "task_detail/{taskName}",
+                arguments = listOf(
+                    navArgument("taskName") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+
+                val taskName = backStackEntry.arguments?.getString("taskName") ?: "Unknown Task"
+
+                onScreenView("TaskDetailScreen")
+
+                TaskDetailScreen(
+                    navController = navController,
+                    taskName = taskName
+                )
             }
         }
     }
