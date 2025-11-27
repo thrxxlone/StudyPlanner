@@ -1,28 +1,34 @@
 package com.example.studyplanner.models
 
+import com.google.firebase.Timestamp
+
 data class TaskItem(
     val id: String = "",
-    val name: String = "",
+    val title: String = "",
     val description: String = "",
-    val priority: String = "",
-    val expiration: String = ""
+    val priority: Int = 0,         // 1 = High, 2 = Medium, 3 = Low, або як тобі потрібно
+    val dueDate: Timestamp = Timestamp.now(),
+    val completed: Boolean = false
 ) {
+
     fun toMap(): Map<String, Any> = mapOf(
         "id" to id,
-        "name" to name,
+        "title" to title,
         "description" to description,
         "priority" to priority,
-        "expiration" to expiration
+        "dueDate" to dueDate,
+        "completed" to completed
     )
 
     companion object {
         fun fromMap(map: Map<String, Any>): TaskItem {
             return TaskItem(
                 id = map["id"] as? String ?: "",
-                name = map["name"] as? String ?: "",
+                title = map["title"] as? String ?: "",
                 description = map["description"] as? String ?: "",
-                priority = map["priority"] as? String ?: "",
-                expiration = map["expiration"] as? String ?: ""
+                priority = (map["priority"] as? Long)?.toInt() ?: 0,
+                dueDate = map["dueDate"] as? Timestamp ?: Timestamp.now(),
+                completed = map["completed"] as? Boolean ?: false
             )
         }
     }

@@ -75,15 +75,20 @@ fun TasksScreen(
                     ) {
                         items(tasks) { t ->
                             TaskCard(
-                                title = t.name,
+                                title = t.title,
                                 description = t.description,
-                                priority = t.priority,
-                                expiration = t.expiration,
+                                priority = when(t.priority) {
+                                    1 -> "High"
+                                    2 -> "Medium"
+                                    3 -> "Low"
+                                    else -> "Unknown"
+                                },
+                                expiration = t.dueDate.toDate().toString(),
                                 onClick = {
-                                    val encodedName = t.name.replace(" ", "%20")
+                                    val encodedTitle = t.title.replace(" ", "%20")
                                     val encodedDesc = t.description.replace(" ", "%20")
                                     navController.navigate(
-                                        "task_detail/$encodedName/$encodedDesc/${t.priority}/${t.expiration}"
+                                        "task_detail/$encodedTitle/$encodedDesc/${t.priority}/${t.dueDate.seconds}"
                                     )
                                 }
                             )

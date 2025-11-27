@@ -15,21 +15,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
-import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
+import com.example.studyplanner.data.UserRepository
 import com.example.studyplanner.data.StorageManager
-import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: () -> Unit,
     onBack: () -> Unit
 ) {
-
     val context = LocalContext.current
     val storage = remember { StorageManager(context) }
+    val userRepository = remember { UserRepository() }
     val scope = rememberCoroutineScope()
 
     var name by remember { mutableStateOf("") }
@@ -47,6 +47,7 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
+        // Back button
         Text(
             "← Back",
             fontSize = 18.sp,
@@ -68,15 +69,13 @@ fun RegisterScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Color(0xFF0D0D0D),
-                    shape = RoundedCornerShape(30.dp)
-                )
+                .background(Color(0xFF0D0D0D), shape = RoundedCornerShape(30.dp))
                 .padding(20.dp)
         ) {
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
+                // Name
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -94,6 +93,7 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Email
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -111,6 +111,7 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Password
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -129,11 +130,13 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Error message
                 errorMessage?.let {
                     Text(it, color = Color.Red, fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
+                // Register button
                 Button(
                     onClick = {
                         if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
@@ -157,58 +160,34 @@ fun RegisterScreen(
                             .createUserWithEmailAndPassword(email, password)
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
-
                                     val user = FirebaseAuth.getInstance().currentUser
-
                                     val updateRequest = UserProfileChangeRequest.Builder()
                                         .setDisplayName(name)
                                         .build()
 
-                                    user?.updateProfile(updateRequest)?.addOnCompleteListener {
-
-                                        // =============== FIRESTORE ===============
-                                        val db = FirebaseFirestore.getInstance()
-                                        val userDoc = db.collection("users").document(user.uid)
-
-                                        // створюємо документ користувача
-                                        userDoc.set(
-                                            mapOf(
-                                                "name" to name,
-                                                "email" to email
-                                            )
-                                        )
-
-                                        // створюємо перший task (щоб зʼявилась колекція)
-                                        userDoc.collection("tasks")
-                                            .add(
-                                                mapOf(
-                                                    "title" to "Welcome task",
-                                                    "description" to "Your first task",
-                                                    "priority" to "Low",
-                                                    "expiration" to "No date"
-                                                )
-                                            )
-                                        // ========================================
-
-                                        // save to DataStore
+                                    user?.updateProfile(updateRequest)?.addOnCompleteListener { updateTask ->
                                         scope.launch {
-                                            storage.saveUser(
-                                                uid = user.uid,
-                                                email = email
-                                            )
-                                            storage.saveName(name)
+                                            try {
+                                                // Додаємо користувача у Firestore з усіма полями
+                                                userRepository.createUserInFirestore(name, email)
+
+                                                // Зберігаємо у DataStore (локально)
+                                                storage.saveUser(uid = user.uid, email = email)
+                                                storage.saveName(name)
+
+                                                isLoading = false
+                                                onRegisterSuccess()
+                                            } catch (e: Exception) {
+                                                isLoading = false
+                                                errorMessage = e.message ?: "Firestore error"
+                                            }
                                         }
-
-                                        isLoading = false
-                                        onRegisterSuccess()
                                     }
-
                                 } else {
                                     isLoading = false
                                     errorMessage = task.exception?.message ?: "Unknown error"
                                 }
                             }
-
                     },
                     modifier = Modifier
                         .fillMaxWidth()
