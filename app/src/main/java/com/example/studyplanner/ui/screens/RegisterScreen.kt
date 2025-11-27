@@ -20,6 +20,7 @@ import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import com.example.studyplanner.data.StorageManager
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun RegisterScreen(
@@ -46,7 +47,6 @@ fun RegisterScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // Back button
         Text(
             "← Back",
             fontSize = 18.sp,
@@ -77,7 +77,6 @@ fun RegisterScreen(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                // Name
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -95,7 +94,6 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Email
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -113,7 +111,6 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Password
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
@@ -132,13 +129,11 @@ fun RegisterScreen(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Error message
                 errorMessage?.let {
                     Text(it, color = Color.Red, fontSize = 13.sp)
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                // Register button
                 Button(
                     onClick = {
                         if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
@@ -165,14 +160,37 @@ fun RegisterScreen(
 
                                     val user = FirebaseAuth.getInstance().currentUser
 
-                                    // 🔹 1. Оновлюємо ім’я в Firebase
                                     val updateRequest = UserProfileChangeRequest.Builder()
                                         .setDisplayName(name)
                                         .build()
 
                                     user?.updateProfile(updateRequest)?.addOnCompleteListener {
 
-                                        // 🔹 2. Зберігаємо все в DataStore
+                                        // =============== FIRESTORE ===============
+                                        val db = FirebaseFirestore.getInstance()
+                                        val userDoc = db.collection("users").document(user.uid)
+
+                                        // створюємо документ користувача
+                                        userDoc.set(
+                                            mapOf(
+                                                "name" to name,
+                                                "email" to email
+                                            )
+                                        )
+
+                                        // створюємо перший task (щоб зʼявилась колекція)
+                                        userDoc.collection("tasks")
+                                            .add(
+                                                mapOf(
+                                                    "title" to "Welcome task",
+                                                    "description" to "Your first task",
+                                                    "priority" to "Low",
+                                                    "expiration" to "No date"
+                                                )
+                                            )
+                                        // ========================================
+
+                                        // save to DataStore
                                         scope.launch {
                                             storage.saveUser(
                                                 uid = user.uid,

@@ -2,13 +2,18 @@ package com.example.studyplanner.bloc
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.studyplanner.data.StorageManager
+import com.example.studyplanner.data.TaskRepository
 import com.example.studyplanner.models.TaskItem
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
-class TaskBloc : ViewModel() {
+class TaskBloc(
+    private val repository: TaskRepository,
+    private val storage: StorageManager
+) : ViewModel() {
 
     private val _state = MutableStateFlow<TaskState>(TaskState.Idle)
     val state: StateFlow<TaskState> = _state
@@ -16,43 +21,30 @@ class TaskBloc : ViewModel() {
     fun onEvent(event: TaskEvent) {
         when (event) {
             is TaskEvent.LoadTasks -> loadTasks()
-            is TaskEvent.ForceError -> forceError()
+            is TaskEvent.ForceError -> {
+                _state.value = TaskState.Error("Manual error (test)", null)
+            }
         }
     }
 
     private fun loadTasks() {
         viewModelScope.launch {
+            _state.value = TaskState.Loading(null)
 
-            val previousData: List<TaskItem>? =
-                (state.value as? TaskState.Data)?.data
+            try {
+                val uid = storage.userUid.firstOrNull()
+                    ?: throw Exception("User UID not found")
 
-            _state.value = TaskState.Loading(previousData)
+                val tasks = repository.getTasks(uid)
 
-            delay(1200) // імітація запиту
+                _state.value = TaskState.Data(tasks)
 
-            val result = listOf(
-                TaskItem("Task 1", "Finish UI for login screen", "High", "01 Nov 2025"),
-                TaskItem("Task 2", "Prepare diagrams for project", "Normal", "03 Nov 2025"),
-                TaskItem("Task 3", "Learn Navigation Compose", "Low", "10 Nov 2025")
-            )
-
-            _state.value = TaskState.Data(result)
-        }
-    }
-
-    private fun forceError() {
-        viewModelScope.launch {
-            val previousData: List<TaskItem>? =
-                (state.value as? TaskState.Data)?.data
-
-            _state.value = TaskState.Loading(previousData)
-
-            delay(1000)
-
-            _state.value = TaskState.Error(
-                message = "Test error occurred",
-                oldData = previousData
-            )
+            } catch (e: Exception) {
+                _state.value = TaskState.Error(
+                    message = e.message ?: "Unknown Firestore error",
+                    oldData = null
+                )
+            }
         }
     }
 }
