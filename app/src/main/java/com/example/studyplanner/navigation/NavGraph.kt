@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavType
@@ -13,6 +14,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import androidx.navigation.compose.rememberNavController
 import com.example.studyplanner.MainActivity
+import com.example.studyplanner.bloc.TaskBloc
+import com.example.studyplanner.data.StorageManager
+import com.example.studyplanner.data.TaskRepository
 import com.example.studyplanner.ui.screens.*
 
 @Composable
@@ -72,8 +76,17 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
 
             composable("tasks") {
                 onScreenView("TasksScreen")
-                TasksScreen(navController)
+
+                val storage = remember { StorageManager(context) }
+                val repository = remember { TaskRepository() }
+                val taskBloc = remember { TaskBloc(repository, storage) }
+
+                TasksScreen(
+                    navController = navController,
+                    taskBloc = taskBloc
+                )
             }
+
 
             composable("profile") {
                 onScreenView("ProfileScreen")
@@ -82,10 +95,19 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
 
             composable("add_task") {
                 onScreenView("AddTaskScreen")
-                AddTaskScreen(navController)
+
+                // Створюємо TaskRepository і StorageManager та TaskBloc
+                val storage = remember { StorageManager(context) }
+                val repository = remember { TaskRepository() }
+                val taskBloc = remember { TaskBloc(repository, storage) }
+
+                AddTaskScreen(
+                    navController = navController,
+                    taskBloc = taskBloc
+                )
             }
 
-            // ✅ TaskDetailScreen
+            // TaskDetailScreen
             composable(
                 "task_detail/{name}/{description}/{priority}/{expiration}",
                 arguments = listOf(
