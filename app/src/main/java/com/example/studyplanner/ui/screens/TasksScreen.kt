@@ -10,24 +10,35 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.studyplanner.bloc.TaskBloc
-import com.example.studyplanner.bloc.TaskEvent
-import com.example.studyplanner.bloc.TaskState
+import com.example.studyplanner.bloc.*
+import com.example.studyplanner.data.StorageManager
+import com.example.studyplanner.data.TaskRepository
 import com.example.studyplanner.ui.components.TaskCard
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TasksScreen(
-    navController: NavController,
-    viewModel: TaskBloc = viewModel()
-) {
-    val state by viewModel.state.collectAsState()
+fun TasksScreen(navController: NavController) {
+    val context = LocalContext.current
+
+    // Створюємо репозиторій та менеджер
+    val repository = TaskRepository()
+    val storage = StorageManager(context)
+
+    // ViewModel через фабрику
+    val taskBloc: TaskBloc = viewModel(
+        factory = TaskBlocFactory(repository, storage)
+    )
+
+    val state by taskBloc.state.collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.onEvent(TaskEvent.LoadTasks)
+        taskBloc.onEvent(TaskEvent.LoadTasks)
     }
 
     Scaffold(
@@ -35,12 +46,9 @@ fun TasksScreen(
             TopAppBar(
                 title = { Text("Tasks") },
                 actions = {
-                    // Кнопка для тестової помилки
-                    IconButton(onClick = { viewModel.onEvent(TaskEvent.ForceError) }) {
+                    IconButton(onClick = { taskBloc.onEvent(TaskEvent.ForceError) }) {
                         Icon(Icons.Default.Warning, contentDescription = "Force Error")
                     }
-
-                    // Кнопка додавання нового завдання
                     IconButton(onClick = { navController.navigate("add_task") }) {
                         Icon(Icons.Default.Add, contentDescription = "Add Task")
                     }
@@ -68,6 +76,7 @@ fun TasksScreen(
 
                 is TaskState.Data -> {
                     val tasks = (state as TaskState.Data).data
+                    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
@@ -77,18 +86,14 @@ fun TasksScreen(
                             TaskCard(
                                 title = t.title,
                                 description = t.description,
-                                priority = when(t.priority) {
-                                    1 -> "High"
-                                    2 -> "Medium"
-                                    3 -> "Low"
-                                    else -> "Unknown"
-                                },
-                                expiration = t.dueDate.toDate().toString(),
+                                priority = t.priority,
+                                dueDate = t.dueDate?.let { formatter.format(it.toDate()) } ?: "",
                                 onClick = {
                                     val encodedTitle = t.title.replace(" ", "%20")
                                     val encodedDesc = t.description.replace(" ", "%20")
                                     navController.navigate(
-                                        "task_detail/$encodedTitle/$encodedDesc/${t.priority}/${t.dueDate.seconds}"
+                                        "task_detail/$encodedTitle/$encodedDesc/${t.priority}/${t.dueDate?.seconds
+                                            ?: 0}"
                                     )
                                 }
                             )
@@ -109,7 +114,7 @@ fun TasksScreen(
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.onEvent(TaskEvent.LoadTasks) }) {
+                        Button(onClick = { taskBloc.onEvent(TaskEvent.LoadTasks) }) {
                             Text("Retry")
                         }
                     }

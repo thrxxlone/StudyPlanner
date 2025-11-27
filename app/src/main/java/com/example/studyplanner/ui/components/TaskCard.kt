@@ -1,6 +1,5 @@
 package com.example.studyplanner.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Card
@@ -9,15 +8,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun TaskCard(
     title: String,
     description: String,
-    priority: String,
-    expiration: String,
+    priority: Int,
+    dueDate: String,
     onClick: () -> Unit
 ) {
     Card(
@@ -41,7 +39,7 @@ fun TaskCard(
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -56,7 +54,7 @@ fun TaskCard(
                 )
 
                 Text(
-                    text = expiration,
+                    text = dueDate,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
