@@ -15,6 +15,7 @@ import androidx.navigation.NavController
 @Composable
 fun TaskDetailScreen(
     navController: NavController,
+    taskId: String,
     taskName: String,
     description: String = "Default task description",
     priority: String = "Medium",
@@ -72,12 +73,29 @@ fun TaskDetailScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Button(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32CD32))
-            ) {
-                Text("Back", color = Color.White, fontSize = 16.sp)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Button(
+                    onClick = { navController.popBackStack() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32CD32)),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Back", color = Color.White, fontSize = 16.sp)
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Button(
+                    onClick = {
+                        // Переходимо на EditTaskScreen з параметрами
+                        navController.navigate(
+                            "edit_task/$taskId/$taskName/$description/$priority/$expiration"
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500)),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Edit", color = Color.White, fontSize = 16.sp)
+                }
             }
         }
     }

@@ -4,10 +4,10 @@ import com.google.firebase.Timestamp
 
 data class TaskItem(
     val id: String = "",
-    val title: String = "",          // використовується в TaskCard як title
+    val title: String = "",
     val description: String = "",
-    val priority: Int = 0,           // число, наприклад 1-5
-    val dueDate: Timestamp? = null,  // дата завдання
+    val priority: Int = 0,
+    val dueDate: Timestamp? = null,
     val completed: Boolean = false
 ) {
     fun toMap(): Map<String, Any> = mapOf(
@@ -21,11 +21,16 @@ data class TaskItem(
 
     companion object {
         fun fromMap(map: Map<String, Any>): TaskItem {
+            val priorityValue = when(val p = map["priority"]) {
+                is Long -> p.toInt()
+                is Int -> p
+                else -> 0
+            }
             return TaskItem(
                 id = map["id"] as? String ?: "",
                 title = map["title"] as? String ?: "",
                 description = map["description"] as? String ?: "",
-                priority = (map["priority"] as? Long)?.toInt() ?: 0,
+                priority = priorityValue,
                 dueDate = map["dueDate"] as? Timestamp,
                 completed = map["completed"] as? Boolean ?: false
             )

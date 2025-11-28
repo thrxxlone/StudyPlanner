@@ -16,6 +16,7 @@ import com.example.studyplanner.bloc.TaskEvent
 import com.example.studyplanner.bloc.TaskState
 import com.example.studyplanner.models.TaskItem
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 
 @Composable
 fun TasksScreen(navController: NavController, taskBloc: TaskBloc) {
@@ -52,7 +53,17 @@ fun TasksScreen(navController: NavController, taskBloc: TaskBloc) {
                         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                             items(tasks) { task ->
                                 TaskCard(task = task, onClick = {
-                                    // Тут можна відкрити деталі завдання
+                                    val route = "task_detail/${task.id}/" +
+                                            "${task.title.replace(" ", "%20")}/" +
+                                            "${task.description.replace(" ", "%20")}/" +
+                                            "${when (task.priority) {
+                                                1 -> "Low"
+                                                2 -> "Normal"
+                                                3 -> "High"
+                                                else -> "Normal"
+                                            }}/" +
+                                            "${task.dueDate?.toDate()?.let { SimpleDateFormat("yyyy-MM-dd").format(it) } ?: ""}"
+                                    navController.navigate(route)
                                 })
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
@@ -74,6 +85,9 @@ fun TasksScreen(navController: NavController, taskBloc: TaskBloc) {
                         }
                     }
                 }
+                // Стани створення/редагування можна додати, якщо треба
+                is TaskState.Creating, is TaskState.Updating,
+                is TaskState.CreateSuccess, is TaskState.UpdateSuccess -> {}
             }
         }
     }
