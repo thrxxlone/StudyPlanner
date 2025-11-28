@@ -16,35 +16,28 @@ import com.example.studyplanner.bloc.TaskEvent
 import com.example.studyplanner.bloc.TaskState
 import com.example.studyplanner.models.TaskItem
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 
 @Composable
 fun TasksScreen(navController: NavController, taskBloc: TaskBloc) {
-
     val state by taskBloc.state.collectAsState()
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        taskBloc.onEvent(TaskEvent.LoadTasks)
-    }
+    LaunchedEffect(Unit) { taskBloc.onEvent(TaskEvent.LoadTasks) }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                navController.navigate("add_task")
-            }) {
+            FloatingActionButton(onClick = { navController.navigate("add_task") }) {
                 Text("+", fontSize = 24.sp)
             }
         }
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+    ) { padding ->
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(padding)) {
+
             when (state) {
-                is TaskState.Idle -> {
-                    Text("No tasks", modifier = Modifier.align(Alignment.Center))
-                }
-                is TaskState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                }
+                is TaskState.Idle -> Text("No tasks", modifier = Modifier.align(Alignment.Center))
+                is TaskState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 is TaskState.Data -> {
                     val tasks = (state as TaskState.Data).data
                     if (tasks.isEmpty()) {
@@ -52,19 +45,10 @@ fun TasksScreen(navController: NavController, taskBloc: TaskBloc) {
                     } else {
                         LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
                             items(tasks) { task ->
-                                TaskCard(task = task, onClick = {
-                                    val route = "task_detail/${task.id}/" +
-                                            "${task.title.replace(" ", "%20")}/" +
-                                            "${task.description.replace(" ", "%20")}/" +
-                                            "${when (task.priority) {
-                                                1 -> "Low"
-                                                2 -> "Normal"
-                                                3 -> "High"
-                                                else -> "Normal"
-                                            }}/" +
-                                            "${task.dueDate?.toDate()?.let { SimpleDateFormat("yyyy-MM-dd").format(it) } ?: ""}"
-                                    navController.navigate(route)
-                                })
+                                TaskCard(task) {
+                                    // Навігація на TaskDetailScreen по ID
+                                    navController.navigate("task_detail/${task.id}")
+                                }
                                 Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
@@ -78,16 +62,15 @@ fun TasksScreen(navController: NavController, taskBloc: TaskBloc) {
                     ) {
                         Text("Error: $errorMsg")
                         Spacer(modifier = Modifier.height(10.dp))
-                        Button(onClick = {
-                            scope.launch { taskBloc.onEvent(TaskEvent.LoadTasks) }
-                        }) {
+                        Button(onClick = { scope.launch { taskBloc.onEvent(TaskEvent.LoadTasks) } }) {
                             Text("Retry")
                         }
                     }
                 }
-                // Стани створення/редагування можна додати, якщо треба
-                is TaskState.Creating, is TaskState.Updating,
-                is TaskState.CreateSuccess, is TaskState.UpdateSuccess -> {}
+                is TaskState.Creating,
+                is TaskState.Updating,
+                is TaskState.CreateSuccess,
+                is TaskState.UpdateSuccess -> {} // ігноруємо в списку
             }
         }
     }

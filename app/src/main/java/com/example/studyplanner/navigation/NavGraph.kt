@@ -29,17 +29,13 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
 
     val context = LocalContext.current
 
-    // Єдиний екземпляр TaskBloc для всіх екранів
+    // Єдиний екземпляр TaskBloc
     val storage = remember { StorageManager(context) }
     val repository = remember { TaskRepository() }
     val taskBloc = remember { TaskBloc(repository, storage) }
 
     Scaffold(
-        bottomBar = {
-            if (currentRoute in bottomBarScreens) {
-                BottomBar(navController = navController)
-            }
-        }
+        bottomBar = { if (currentRoute in bottomBarScreens) BottomBar(navController) }
     ) { padding ->
 
         NavHost(
@@ -58,103 +54,55 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
                 )
             }
 
-            composable("home") {
-                onScreenView("HomeScreen")
-                HomeScreen(
-                    onTestCrash = { (context as? MainActivity)?.generateTestCrash() }
-                )
-            }
+            composable("home") { HomeScreen(onTestCrash = { (context as? MainActivity)?.generateTestCrash() }) }
 
-            composable("register") {
-                onScreenView("RegisterScreen")
-                RegisterScreen(
-                    onRegisterSuccess = { navController.navigate("home") },
-                    onBack = { navController.popBackStack() }
-                )
-            }
+            composable("register") { RegisterScreen(
+                onRegisterSuccess = { navController.navigate("home") },
+                onBack = { navController.popBackStack() }
+            )}
 
-            composable("schedule") {
-                onScreenView("ScheduleScreen")
-                ScheduleScreen(onBack = { navController.navigate("home") })
-            }
+            composable("schedule") { ScheduleScreen(onBack = { navController.navigate("home") }) }
 
-            composable("tasks") {
-                onScreenView("TasksScreen")
-                TasksScreen(navController = navController, taskBloc = taskBloc)
-            }
+            composable("tasks") { TasksScreen(navController, taskBloc) }
 
-            composable("profile") {
-                onScreenView("ProfileScreen")
-                ProfileScreen(onBack = { navController.navigate("home") })
-            }
+            composable("profile") { ProfileScreen(onBack = { navController.navigate("home") }) }
 
-            composable("add_task") {
-                onScreenView("AddTaskScreen")
-                AddTaskScreen(navController = navController, taskBloc = taskBloc)
-            }
+            composable("add_task") { AddTaskScreen(navController, taskBloc) }
 
-            // TaskDetailScreen
+            // TaskDetailScreen по taskId
             composable(
-                "task_detail/{taskId}/{name}/{description}/{priority}/{expiration}",
-                arguments = listOf(
-                    navArgument("taskId") { type = NavType.StringType },
-                    navArgument("name") { type = NavType.StringType },
-                    navArgument("description") { type = NavType.StringType },
-                    navArgument("priority") { type = NavType.StringType },
-                    navArgument("expiration") { type = NavType.StringType }
-                )
+                "task_detail/{taskId}",
+                arguments = listOf(navArgument("taskId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-                val name = backStackEntry.arguments?.getString("name")?.replace("%20", " ") ?: ""
-                val description = backStackEntry.arguments?.getString("description")?.replace("%20", " ") ?: ""
-                val priority = backStackEntry.arguments?.getString("priority") ?: ""
-                val expiration = backStackEntry.arguments?.getString("expiration") ?: ""
+                val task = (taskBloc.state.value as? com.example.studyplanner.bloc.TaskState.Data)
+                    ?.data?.find { it.id == taskId }
 
-                TaskDetailScreen(
-                    navController = navController,
-                    taskId = taskId,
-                    taskName = name,
-                    description = description,
-                    priority = priority,
-                    expiration = expiration
-                )
+                if (task != null) {
+                    TaskDetailScreen(
+                        navController = navController,
+                        taskBloc = taskBloc,
+                        taskId = task.id,
+                        taskName = task.title,
+                        description = task.description,
+                        priority = task.priority.toString(),
+                        expiration = task.dueDate?.toDate()?.toString() ?: ""
+                    )
+                }
             }
 
-            // EditTaskScreen
+            // EditTaskScreen по taskId
             composable(
-                "edit_task/{taskId}/{title}/{description}/{priority}/{expiration}",
-                arguments = listOf(
-                    navArgument("taskId") { type = NavType.StringType },
-                    navArgument("title") { type = NavType.StringType },
-                    navArgument("description") { type = NavType.StringType },
-                    navArgument("priority") { type = NavType.StringType },
-                    navArgument("expiration") { type = NavType.StringType }
-                )
+                "edit_task/{taskId}",
+                arguments = listOf(navArgument("taskId") { type = NavType.StringType })
             ) { backStackEntry ->
                 val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
-                val title = backStackEntry.arguments?.getString("title")?.replace("%20", " ") ?: ""
-                val description = backStackEntry.arguments?.getString("description")?.replace("%20", " ") ?: ""
-                val priority = backStackEntry.arguments?.getString("priority") ?: ""
-                val expiration = backStackEntry.arguments?.getString("expiration") ?: ""
+                val task = (taskBloc.state.value as? com.example.studyplanner.bloc.TaskState.Data)
+                    ?.data?.find { it.id == taskId }
 
-                val task = TaskItem(
-                    id = taskId,
-                    title = title,
-                    description = description,
-                    priority = when (priority) {
-                        "Low" -> 1
-                        "Normal" -> 2
-                        "High" -> 3
-                        else -> 2
-                    },
-                    completed = false
-                )
-
-                EditTaskScreen(
-                    navController = navController,
-                    taskBloc = taskBloc,
-                    task = task
-                )
+                if (task != null) {
+                    EditTaskScreen(navController = navController, taskBloc = taskBloc, task = task)
+                }
             }
         }
     }

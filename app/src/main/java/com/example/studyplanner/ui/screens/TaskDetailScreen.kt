@@ -1,102 +1,77 @@
 package com.example.studyplanner.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.studyplanner.bloc.TaskBloc
+import com.example.studyplanner.bloc.TaskEvent
+import com.example.studyplanner.models.TaskItem
+import kotlinx.coroutines.launch
 
 @Composable
 fun TaskDetailScreen(
     navController: NavController,
+    taskBloc: TaskBloc,
     taskId: String,
     taskName: String,
-    description: String = "Default task description",
-    priority: String = "Medium",
-    expiration: String = "01 Nov 2025"
+    description: String,
+    priority: String,
+    expiration: String
 ) {
-    Box(
+    val scope = rememberCoroutineScope()
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0D0D0D))
+            .padding(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text(
-                text = "Task Details",
-                fontSize = 28.sp,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
+        Text("Task Details", fontSize = 28.sp)
+        Spacer(modifier = Modifier.height(16.dp))
+        Text("Title: $taskName", fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Description: $description", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Priority: $priority", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text("Due: $expiration", fontSize = 16.sp)
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF5123E8), RoundedCornerShape(20.dp))
-                    .padding(16.dp)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Button(onClick = {
+                val route = "edit_task/$taskId/" +
+                        "${taskName.replace(" ", "%20")}/" +
+                        "${description.replace(" ", "%20")}/" +
+                        "$priority/$expiration"
+                navController.navigate(route)
+            }) {
+                Text("Edit")
+            }
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        taskBloc.onEvent(TaskEvent.DeleteTask(taskId))
+                        navController.popBackStack()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
             ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = taskName,
-                        fontSize = 22.sp,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Description: $description",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Priority: $priority",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Expiration: $expiration",
-                        fontSize = 16.sp,
-                        color = Color.White
-                    )
-                }
+                Text("Delete")
             }
+        }
 
-            Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Button(
-                    onClick = { navController.popBackStack() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32CD32)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Back", color = Color.White, fontSize = 16.sp)
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Button(
-                    onClick = {
-                        // Переходимо на EditTaskScreen з параметрами
-                        navController.navigate(
-                            "edit_task/$taskId/$taskName/$description/$priority/$expiration"
-                        )
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA500)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Edit", color = Color.White, fontSize = 16.sp)
-                }
-            }
+        Button(onClick = { navController.popBackStack() }) {
+            Text("Back")
         }
     }
 }
