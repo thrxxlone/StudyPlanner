@@ -18,6 +18,7 @@ class TaskBloc(
     private val _state = MutableStateFlow<TaskState>(TaskState.Idle)
     val state: StateFlow<TaskState> = _state
 
+
     fun onEvent(event: TaskEvent) {
         when (event) {
             is TaskEvent.LoadTasks -> loadTasks()

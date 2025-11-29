@@ -180,14 +180,12 @@ fun LoginScreen(
                                     isLoading = false
 
                                     if (task.isSuccessful) {
-
                                         val uid = auth.currentUser?.uid ?: ""
                                         val emailUser = auth.currentUser?.email ?: email
 
-                                        if (rememberMe) {
-                                            coroutine.launch {
-                                                storage.saveUser(uid, emailUser)
-                                            }
+                                        // 🔹 Завжди зберігаємо UID та email
+                                        coroutine.launch {
+                                            storage.saveUser(uid, emailUser)
                                         }
 
                                         onLoginSuccess()
