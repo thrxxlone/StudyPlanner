@@ -22,7 +22,7 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.ui.platform.LocalContext
 import com.example.studyplanner.data.StorageManager
 import kotlinx.coroutines.launch
-// h
+
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
