@@ -95,6 +95,7 @@ fun ProfileScreen(onBack: () -> Unit) {
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp)
                 .height(50.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Blue),
             shape = RoundedCornerShape(25.dp)
         ) {
             Text("Log Out", fontSize = 16.sp)

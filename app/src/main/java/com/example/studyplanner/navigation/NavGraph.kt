@@ -54,7 +54,12 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
                 )
             }
 
-            composable("home") { HomeScreen(onTestCrash = { (context as? MainActivity)?.generateTestCrash() }) }
+            composable("home") {
+                HomeScreen(
+                    taskBloc = taskBloc,
+                    onTestCrash = { (context as? MainActivity)?.generateTestCrash() }
+                )
+            }
 
             composable("register") { RegisterScreen(
                 onRegisterSuccess = { navController.navigate("home") },
@@ -82,11 +87,7 @@ fun AppNavGraph(onScreenView: (String) -> Unit) {
                     TaskDetailScreen(
                         navController = navController,
                         taskBloc = taskBloc,
-                        taskId = task.id,
-                        taskName = task.title,
-                        description = task.description,
-                        priority = task.priority.toString(),
-                        expiration = task.dueDate?.toDate()?.toString() ?: ""
+                        taskId = task.id
                     )
                 }
             }
