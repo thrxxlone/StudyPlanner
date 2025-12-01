@@ -30,6 +30,8 @@ import com.example.studyplanner.data.StorageManager
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.clickable
+
 
 
 @Composable
@@ -74,11 +76,20 @@ fun HomeScreen(
 
         // CRASH TEST LABEL (як у макеті)
         Box(
-            Modifier
-                .background(Color(0xFFFF4B4B), RoundedCornerShape(10.dp))
-                .padding(horizontal = 10.dp, vertical = 4.dp)
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFFF4B4B))
+                .clickable {
+                    onTestCrash()  // ← ТЕПЕР ПРАЦЮЄ
+                }
+                .padding(horizontal = 10.dp, vertical = 6.dp)
         ) {
-            Text("Crash Test", color = Color.White, fontSize = 12.sp)
+            Text(
+                "Crash Test",
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
 
         Spacer(Modifier.height(14.dp))

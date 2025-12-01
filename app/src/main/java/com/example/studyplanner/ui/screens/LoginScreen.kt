@@ -183,7 +183,7 @@ fun LoginScreen(
                                         val uid = auth.currentUser?.uid ?: ""
                                         val emailUser = auth.currentUser?.email ?: email
 
-                                        // 🔹 Завжди зберігаємо UID та email
+                                        // Завжди зберігаю UID та email
                                         coroutine.launch {
                                             storage.saveUser(uid, emailUser)
                                         }

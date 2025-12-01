@@ -9,11 +9,12 @@ class TaskBlocFactory(
     private val repository: TaskRepository,
     private val storage: StorageManager
 ) : ViewModelProvider.Factory {
+
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if(modelClass.isAssignableFrom(TaskBloc::class.java)) {
+        if (modelClass.isAssignableFrom(TaskBloc::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return TaskBloc(repository, storage) as T
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }
